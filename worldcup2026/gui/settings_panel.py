@@ -20,6 +20,17 @@ class SettingsPanel(QDialog):
             QGroupBox { font-weight: bold; color: #fff; border: 1px solid #2a2a4a;
                         border-radius: 8px; margin-top: 12px; padding-top: 16px; }
             QGroupBox::title { subcontrol-origin: margin; left: 12px; padding: 0 8px; }
+            QCheckBox { color: #ffffff; font-size: 14px; spacing: 10px; padding: 4px 0px; }
+            QCheckBox::indicator { width: 20px; height: 20px; border-radius: 4px;
+                                   border: 2px solid #555; background: #16213e; }
+            QCheckBox::indicator:checked { background: #e94560; border-color: #e94560; }
+            QRadioButton { color: #ffffff; font-size: 14px; padding: 4px 0px; }
+            QRadioButton::indicator { width: 18px; height: 18px; border-radius: 9px;
+                                      border: 2px solid #555; background: #16213e; }
+            QRadioButton::indicator:checked { background: #e94560; border-color: #e94560; }
+            QLabel { color: #e0e0e0; font-size: 13px; }
+            QDoubleSpinBox { background: #16213e; color: #ffffff; font-size: 14px;
+                             border-radius: 4px; padding: 4px 8px; border: 1px solid #555; }
         """)
         self.settings = current_settings or {
             "mode": "hybrid", "h2h_weight": 0.5, "time_decay": 0.85,
@@ -40,7 +51,6 @@ class SettingsPanel(QDialog):
         self.radio_elo = QRadioButton("仅 Elo + 泊松")
         self.radio_hybrid = QRadioButton("混合模式")
         for btn in [self.radio_h2h, self.radio_elo, self.radio_hybrid]:
-            btn.setStyleSheet("color: #e0e0e0; padding: 4px;")
             self.btn_group.addButton(btn)
             mode_layout.addWidget(btn)
         if self.settings["mode"] == "h2h": self.radio_h2h.setChecked(True)
@@ -55,12 +65,16 @@ class SettingsPanel(QDialog):
         self.weight_slider.setRange(0, 100)
         self.weight_slider.setValue(int(self.settings["h2h_weight"] * 100))
         self.weight_label = QLabel(f"H2H {self.settings['h2h_weight']*100:.0f}% : {(1-self.settings['h2h_weight'])*100:.0f}% Elo")
-        self.weight_label.setStyleSheet("color: #a0c0ff;")
+        self.weight_label.setStyleSheet("color: #ffd700; font-size: 14px; font-weight: bold;")
         self.weight_slider.valueChanged.connect(
             lambda v: self.weight_label.setText(f"H2H {v:.0f}% : {100-v:.0f}% Elo"))
-        slider_layout.addWidget(QLabel("H2H"))
+        h2h_lbl = QLabel("H2H")
+        h2h_lbl.setStyleSheet("color: #ffffff; font-size: 13px;")
+        elo_lbl = QLabel("Elo")
+        elo_lbl.setStyleSheet("color: #ffffff; font-size: 13px;")
+        slider_layout.addWidget(h2h_lbl)
         slider_layout.addWidget(self.weight_slider)
-        slider_layout.addWidget(QLabel("Elo"))
+        slider_layout.addWidget(elo_lbl)
         weight_layout.addWidget(self.weight_label)
         weight_layout.addLayout(slider_layout)
         layout.addWidget(weight_group)
@@ -78,6 +92,7 @@ class SettingsPanel(QDialog):
         ]:
             cb = QCheckBox(label)
             cb.setChecked(self.settings["data_sources"].get(key, True))
+            cb.setStyleSheet("color: #ffffff; font-size: 14px; padding: 5px 0px; spacing: 10px;")
             self.source_checkboxes[key] = cb
             source_layout.addWidget(cb)
         layout.addWidget(source_group)
@@ -87,7 +102,9 @@ class SettingsPanel(QDialog):
         for name, key, rng, step in [("时间衰减系数", "time_decay", (0.5, 1.0), 0.01),
                                        ("主场优势系数", "home_advantage", (1.0, 1.5), 0.05)]:
             row = QHBoxLayout()
-            row.addWidget(QLabel(name))
+            name_lbl = QLabel(name)
+            name_lbl.setStyleSheet("color: #ffffff; font-size: 13px;")
+            row.addWidget(name_lbl)
             spin = QDoubleSpinBox()
             spin.setRange(*rng)
             spin.setSingleStep(step)
