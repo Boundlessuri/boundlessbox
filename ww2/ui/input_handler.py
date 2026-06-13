@@ -29,6 +29,8 @@ class InputHandler:
     def _on_click(self, pos, button, btn_rects, game_state):
         px, py = pos
 
+        if btn_rects.get("help_btn") and btn_rects["help_btn"].collidepoint(px, py):
+            return "show_help"
         if btn_rects["end_turn_btn"].collidepoint(px, py):
             return self._end_turn(game_state)
         if btn_rects["new_game"].collidepoint(px, py):

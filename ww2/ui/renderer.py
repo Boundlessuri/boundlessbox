@@ -131,6 +131,12 @@ class Renderer:
 
         y = 10
 
+        # Help button (?) at top-right of panel
+        help_rect = pygame.Rect(px + self.panel_width - 35, y, 26, 26)
+        pygame.draw.rect(self.screen, (80, 80, 130), help_rect, border_radius=4)
+        txt = FONT_MED.render("?", True, WHITE)
+        self.screen.blit(txt, (help_rect.x + 7, help_rect.y + 2))
+
         txt = FONT_LARGE.render(f"回合 {game_state.turn_number}/{game_state.max_turns}", True, WHITE)
         self.screen.blit(txt, (px + 10, y))
         y += 30
@@ -221,6 +227,7 @@ class Renderer:
         buttons = {
             "end_turn_btn": pygame.Rect(px + 20, py, self.panel_width - 40, 32),
             "new_game": pygame.Rect(px + 20, py + 38, self.panel_width - 40, 32),
+            "help_btn": pygame.Rect(px + self.panel_width - 35, 10, 26, 26),
         }
         if game_state.selected_unit:
             buttons["deselect"] = pygame.Rect(px + 60, py + 80, self.panel_width - 120, 26)
