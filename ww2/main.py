@@ -156,7 +156,7 @@ def run():
                     break
 
                 result = input_handler.handle_event(event, game_state)
-                if result == "new_game":
+                if result in ("new_game", "game_over"):
                     game_running = False
 
             if game_state.is_game_over():

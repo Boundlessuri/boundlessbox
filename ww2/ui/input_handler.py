@@ -29,12 +29,15 @@ class InputHandler:
     def _on_click(self, pos, button, btn_rects, game_state):
         px, py = pos
 
-        if btn_rects["end_phase"].collidepoint(px, py):
-            return self._end_phase(game_state)
         if btn_rects["end_turn_btn"].collidepoint(px, py):
             return self._end_turn(game_state)
         if btn_rects["new_game"].collidepoint(px, py):
             return "new_game"
+        if "deselect" in btn_rects and btn_rects["deselect"].collidepoint(px, py):
+            game_state.selected_unit = None
+            self.renderer.move_hexes.clear()
+            self.renderer.attack_hexes.clear()
+            return "deselect"
 
         panel_x = self.renderer.screen.get_width() - self.renderer.panel_width
         if px >= panel_x:
@@ -58,77 +61,67 @@ class InputHandler:
 
         pos_key = (clicked_hex.q, clicked_hex.r)
         clicked_unit = game_state.get_unit_at(pos_key)
+        selected_unit = game_state.units.get(game_state.selected_unit) if game_state.selected_unit else None
 
         if game_state.current_player != "player":
             return None
 
-        if game_state.phase == "movement":
-            if game_state.selected_unit is not None:
-                if pos_key in self.renderer.move_hexes:
-                    game_state.move_unit(game_state.selected_unit, clicked_hex)
-                    self.renderer.move_hexes.clear()
-                    return "moved"
-                if clicked_unit and game_state._is_player_side(clicked_unit.nation):
-                    game_state.selected_unit = clicked_unit.unit_id
-                    self._update_move_range(game_state)
-                    return "selected"
-                game_state.selected_unit = None
+        # Case 1: Unit selected, clicked a valid move hex → move
+        if selected_unit and pos_key in self.renderer.move_hexes:
+            game_state.move_unit(game_state.selected_unit, clicked_hex)
+            # After moving, show attack range for this unit
+            self.renderer.move_hexes.clear()
+            self._update_attack_range(game_state)
+            return "moved"
+
+        # Case 2: Unit selected, clicked a valid attack target → attack
+        if selected_unit and pos_key in self.renderer.attack_hexes:
+            if clicked_unit and not game_state._is_player_side(clicked_unit.nation):
+                desc = execute_attack(selected_unit.unit_id, clicked_unit.unit_id, game_state)
                 self.renderer.move_hexes.clear()
-                return None
+                self.renderer.attack_hexes.clear()
+                game_state.selected_unit = None
+                return f"combat: {desc}"
 
-            if clicked_unit and game_state._is_player_side(clicked_unit.nation):
-                if not clicked_unit.moved_this_turn:
-                    game_state.selected_unit = clicked_unit.unit_id
-                    self._update_move_range(game_state)
-                    return "selected"
+        # Case 3: Clicked own unit → select it (or switch to it)
+        if clicked_unit and game_state._is_player_side(clicked_unit.nation):
+            game_state.selected_unit = clicked_unit.unit_id
+            self._update_ranges(game_state)
+            return "selected"
 
-        elif game_state.phase == "combat":
-            unit = game_state.units.get(game_state.selected_unit) if game_state.selected_unit else None
-
-            if clicked_unit and not game_state._is_player_side(clicked_unit.nation) and unit:
-                targets = get_attack_targets(unit, game_state)
-                if clicked_unit in targets:
-                    desc = execute_attack(unit.unit_id, clicked_unit.unit_id, game_state)
-                    self.renderer.move_hexes.clear()
-                    self.renderer.attack_hexes.clear()
-                    return f"combat: {desc}"
-
-            if clicked_unit and game_state._is_player_side(clicked_unit.nation):
-                if not clicked_unit.attacked_this_turn:
-                    game_state.selected_unit = clicked_unit.unit_id
-                    self._update_attack_range(game_state)
-                    return "selected"
-
+        # Case 4: Clicked empty/enemy hex → deselect
+        game_state.selected_unit = None
+        self.renderer.move_hexes.clear()
+        self.renderer.attack_hexes.clear()
         return None
 
-    def _update_move_range(self, game_state):
+    def _update_ranges(self, game_state):
+        """Show move range and attack targets for selected unit."""
         unit = game_state.units.get(game_state.selected_unit)
-        if unit and not unit.moved_this_turn:
+        if not unit:
+            return
+        if not unit.moved_this_turn:
             self.renderer.move_hexes = get_valid_moves(unit, game_state.map, game_state.unit_at_hex)
+        else:
+            self.renderer.move_hexes.clear()
+
+        if not unit.attacked_this_turn:
+            self._update_attack_range(game_state)
+        else:
+            self.renderer.attack_hexes.clear()
 
     def _update_attack_range(self, game_state):
         unit = game_state.units.get(game_state.selected_unit)
         if unit and not unit.attacked_this_turn:
             targets = get_attack_targets(unit, game_state)
             self.renderer.attack_hexes = {t.hex_pos for t in targets}
-
-    def _end_phase(self, game_state):
-        if game_state.current_player == "player":
-            if game_state.phase == "movement":
-                game_state.phase = "combat"
-                game_state.selected_unit = None
-                self.renderer.move_hexes.clear()
-                self.renderer.attack_hexes.clear()
-                return "phase_changed"
-            elif game_state.phase == "combat":
-                return self._end_turn(game_state)
-        return None
+        else:
+            self.renderer.attack_hexes.clear()
 
     def _end_turn(self, game_state):
         from ..ai.ai_player import ai_turn
         if game_state.current_player == "player":
             game_state.current_player = "ai"
-            game_state.phase = "movement"
             game_state.selected_unit = None
             self.renderer.move_hexes.clear()
             self.renderer.attack_hexes.clear()

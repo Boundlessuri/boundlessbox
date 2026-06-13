@@ -6,7 +6,6 @@ from ..units.combat import NATION_NAMES
 from .colors import *
 
 pygame.font.init()
-# Use system font for Chinese support
 try:
     FONT_SMALL = pygame.font.SysFont("Microsoft YaHei", 14)
     FONT_MED = pygame.font.SysFont("Microsoft YaHei", 18)
@@ -134,24 +133,23 @@ class Renderer:
 
         txt = FONT_LARGE.render(f"回合 {game_state.turn_number}/{game_state.max_turns}", True, WHITE)
         self.screen.blit(txt, (px + 10, y))
-        y += 28
+        y += 30
 
-        phase_name = {"movement": "移动阶段", "combat": "战斗阶段"}.get(game_state.phase, game_state.phase)
-        txt = FONT_MED.render(f"阶段: {phase_name}", True, YELLOW)
+        player_tag = "我方行动" if game_state.current_player == "player" else "AI 思考中"
+        txt = FONT_MED.render(player_tag, True, YELLOW)
         self.screen.blit(txt, (px + 10, y))
-        y += 22
+        y += 26
 
-        player_tag = "我方" if game_state.current_player == "player" else "AI"
         pn_cn = NATION_NAMES.get(game_state.player_nation, game_state.player_nation)
-        txt = FONT_MED.render(f"阵营: {player_tag} ({pn_cn})", True, WHITE)
+        txt = FONT_MED.render(f"阵营: {pn_cn}", True, WHITE)
         self.screen.blit(txt, (px + 10, y))
-        y += 28
+        y += 24
 
         txt = FONT_MED.render(f"我方 VP: {game_state.player_vp}  敌方 VP: {game_state.ai_vp}", True, GREEN)
         self.screen.blit(txt, (px + 10, y))
         y += 28
 
-        y += 10
+        y += 8
         pygame.draw.line(self.screen, GRAY, (px + 5, y), (px + self.panel_width - 5, y), 1)
         y += 10
 
@@ -159,21 +157,27 @@ class Renderer:
             u = game_state.units[game_state.selected_unit]
             txt = FONT_BOLD.render(u.name, True, YELLOW)
             self.screen.blit(txt, (px + 10, y))
-            y += 24
+            y += 26
             cn = NATION_NAMES.get(u.nation, u.nation)
+            moved = "已移动" if u.moved_this_turn else "可移动"
+            fought = "已攻击" if u.attacked_this_turn else "可攻击"
             lines = [
                 f"攻击: {u.attack_power}  防御: {u.defense_power}",
                 f"移动: {u.movement_points}  兵力: {u.current_steps}/{u.max_steps}",
                 f"国籍: {cn}",
+                f"状态: {moved} / {fought}",
             ]
             for line in lines:
                 txt = FONT_SMALL.render(line, True, TEXT_COLOR)
                 self.screen.blit(txt, (px + 10, y))
                 y += 16
         else:
-            txt = FONT_SMALL.render("点击单位以选择", True, GRAY)
+            txt = FONT_SMALL.render("点击己方单位以选择", True, GRAY)
             self.screen.blit(txt, (px + 10, y))
-            y += 20
+            y += 10
+            txt = FONT_SMALL.render("左键移动 / 左键攻击", True, GRAY)
+            self.screen.blit(txt, (px + 10, y))
+            y += 16
 
         y += 10
         pygame.draw.line(self.screen, GRAY, (px + 5, y), (px + self.panel_width - 5, y), 1)
@@ -186,12 +190,15 @@ class Renderer:
             self.screen.blit(txt, (px + 10, y))
             y += 14
 
-        y = sh - 120
-        self._draw_button(px + 20, y, self.panel_width - 40, 30, "结束阶段", game_state)
-        y += 35
-        self._draw_button(px + 20, y, self.panel_width - 40, 30, "结束回合", game_state)
-        y += 35
-        self._draw_button(px + 20, y, self.panel_width - 40, 30, "新游戏", game_state)
+        y = sh - 85
+        self._draw_button(px + 20, y, self.panel_width - 40, 32, "结束回合 (AI行动)", game_state)
+        y += 38
+        self._draw_button(px + 20, y, self.panel_width - 40, 32, "返回主菜单", game_state)
+
+        # Deselect button when unit selected
+        if game_state.selected_unit:
+            y += 40
+            self._draw_button(px + 60, y, self.panel_width - 120, 26, "取消选择", game_state)
 
     def _draw_button(self, x, y, w, h, text, game_state):
         rect = pygame.Rect(x, y, w, h)
@@ -201,16 +208,20 @@ class Renderer:
         else:
             pygame.draw.rect(self.screen, BUTTON_BG, rect, border_radius=4)
         txt = FONT_SMALL.render(text, True, WHITE)
-        self.screen.blit(txt, (x + 10, y + 8))
+        txt_x = x + (w - txt.get_width()) // 2
+        txt_y = y + (h - txt.get_height()) // 2
+        self.screen.blit(txt, (txt_x, txt_y))
         return rect
 
     def get_button_rects(self, game_state):
         sw = self.screen.get_width()
         sh = self.screen.get_height()
         px = sw - self.panel_width
-        py = sh - 120
-        return {
-            "end_phase": pygame.Rect(px + 20, py, self.panel_width - 40, 30),
-            "end_turn_btn": pygame.Rect(px + 20, py + 35, self.panel_width - 40, 30),
-            "new_game": pygame.Rect(px + 20, py + 70, self.panel_width - 40, 30),
+        py = sh - 85
+        buttons = {
+            "end_turn_btn": pygame.Rect(px + 20, py, self.panel_width - 40, 32),
+            "new_game": pygame.Rect(px + 20, py + 38, self.panel_width - 40, 32),
         }
+        if game_state.selected_unit:
+            buttons["deselect"] = pygame.Rect(px + 60, py + 80, self.panel_width - 120, 26)
+        return buttons
