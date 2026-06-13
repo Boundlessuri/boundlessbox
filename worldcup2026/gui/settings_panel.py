@@ -2,10 +2,10 @@
 
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QRadioButton,
-    QSlider, QCheckBox, QPushButton, QButtonGroup, QGroupBox,
-    QDoubleSpinBox, QListWidget, QListWidgetItem, QScrollArea, QWidget
+    QSlider, QPushButton, QButtonGroup, QGroupBox,
+    QDoubleSpinBox, QListWidget, QListWidgetItem
 )
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal, QMargins
 
 
 SOURCE_LABELS = [
@@ -111,7 +111,7 @@ class SettingsPanel(QDialog):
             checked = self.settings["data_sources"].get(key, True)
             item.setCheckState(Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked)
             item.setData(Qt.ItemDataRole.UserRole, key)
-            item.setSizeHint(item.sizeHint().grownBy(0, 6, 0, 6))
+            item.setSizeHint(item.sizeHint().grownBy(QMargins(0, 6, 0, 6)))
             self.source_list.addItem(item)
             self.source_items[key] = item
         source_layout.addWidget(self.source_list)
