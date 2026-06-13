@@ -1,0 +1,40 @@
+{
+  "germany": {
+    "infantry_division": {"name": "步兵师", "attack": 4, "defense": 5, "movement": 3, "steps": 2},
+    "panzer_division": {"name": "装甲师", "attack": 7, "defense": 4, "movement": 5, "steps": 2},
+    "ss_panzer_division": {"name": "党卫军装甲师", "attack": 8, "defense": 5, "movement": 5, "steps": 2},
+    "fallschirmjager_division": {"name": "伞兵师", "attack": 5, "defense": 4, "movement": 4, "steps": 2}
+  },
+  "ussr": {
+    "rifle_corps": {"name": "步兵军", "attack": 3, "defense": 4, "movement": 2, "steps": 2},
+    "tank_corps": {"name": "坦克军", "attack": 6, "defense": 3, "movement": 4, "steps": 2},
+    "guards_rifle_corps": {"name": "近卫步兵军", "attack": 5, "defense": 6, "movement": 3, "steps": 2},
+    "mech_corps": {"name": "机械化军", "attack": 5, "defense": 4, "movement": 4, "steps": 2}
+  },
+  "usa": {
+    "infantry_division": {"name": "步兵师", "attack": 5, "defense": 5, "movement": 3, "steps": 2},
+    "armored_division": {"name": "装甲师", "attack": 7, "defense": 4, "movement": 5, "steps": 2},
+    "airborne_division": {"name": "空降师", "attack": 6, "defense": 3, "movement": 4, "steps": 2},
+    "marine_division": {"name": "陆战师", "attack": 6, "defense": 4, "movement": 3, "steps": 2}
+  },
+  "uk": {
+    "infantry_division": {"name": "步兵师", "attack": 4, "defense": 5, "movement": 3, "steps": 2},
+    "armoured_division": {"name": "装甲师", "attack": 6, "defense": 4, "movement": 5, "steps": 2},
+    "airborne_division": {"name": "空降师", "attack": 5, "defense": 3, "movement": 4, "steps": 2}
+  },
+  "france": {
+    "infantry_division": {"name": "步兵师", "attack": 3, "defense": 4, "movement": 2, "steps": 2},
+    "armored_division": {"name": "装甲师", "attack": 4, "defense": 3, "movement": 3, "steps": 2},
+    "colonial_division": {"name": "殖民地师", "attack": 3, "defense": 3, "movement": 2, "steps": 2}
+  },
+  "japan": {
+    "infantry_division": {"name": "步兵师团", "attack": 4, "defense": 5, "movement": 3, "steps": 2},
+    "armored_division": {"name": "战车师团", "attack": 3, "defense": 2, "movement": 4, "steps": 2},
+    "marine_division": {"name": "海军陆战队", "attack": 5, "defense": 3, "movement": 3, "steps": 2}
+  },
+  "china": {
+    "infantry_corps": {"name": "步兵军", "attack": 2, "defense": 3, "movement": 2, "steps": 2},
+    "guerrilla_corps": {"name": "游击军", "attack": 2, "defense": 4, "movement": 3, "steps": 2},
+    "elite_corps": {"name": "精锐军", "attack": 3, "defense": 4, "movement": 2, "steps": 2}
+  }
+}

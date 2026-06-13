@@ -1,0 +1,43 @@
+{
+  "name": "诺曼底登陆 - 1944",
+  "player_nation": "usa",
+  "ai_nation": "germany",
+  "player_air": true,
+  "ai_air": false,
+  "max_turns": 12,
+  "player_allies": ["uk"],
+  "ai_allies": [],
+  "map": {
+    "cols": 20,
+    "rows": 16,
+    "hex_size": 24,
+    "terrain": [
+      {"q":10,"r":12,"t":4,"vp":10},{"q":6,"r":3,"t":4,"vp":5},{"q":14,"r":4,"t":4,"vp":5},
+      {"q":17,"r":13,"t":4,"vp":10},
+      {"q":5,"r":5,"t":1,"vp":0},{"q":6,"r":5,"t":1,"vp":0},{"q":7,"r":4,"t":1,"vp":0},
+      {"q":12,"r":3,"t":1,"vp":0},{"q":13,"r":3,"t":1,"vp":0},{"q":14,"r":3,"t":1,"vp":0},
+      {"q":8,"r":7,"t":1,"vp":0},{"q":9,"r":6,"t":1,"vp":0},{"q":10,"r":6,"t":1,"vp":0},
+      {"q":7,"r":9,"t":1,"vp":0},{"q":8,"r":9,"t":1,"vp":0},
+      {"q":4,"r":6,"t":2,"vp":0},{"q":9,"r":4,"t":2,"vp":0},{"q":11,"r":5,"t":2,"vp":0},
+      {"q":15,"r":7,"t":2,"vp":0},{"q":6,"r":10,"t":2,"vp":0},{"q":12,"r":9,"t":2,"vp":0},
+      {"q":10,"r":11,"t":2,"vp":0},{"q":16,"r":10,"t":2,"vp":0},
+      {"q":8,"r":5,"t":6,"vp":0},{"q":9,"r":5,"t":6,"vp":0},{"q":10,"r":5,"t":6,"vp":0},
+      {"q":11,"r":6,"t":6,"vp":0},{"q":12,"r":6,"t":6,"vp":0},
+      {"q":15,"r":11,"t":6,"vp":0},{"q":16,"r":11,"t":6,"vp":0},{"q":17,"r":12,"t":6,"vp":0}
+    ]
+  },
+  "units": [
+    {"nation":"usa","type":"infantry_division","q":3,"r":13},{"nation":"usa","type":"infantry_division","q":4,"r":13},
+    {"nation":"usa","type":"infantry_division","q":5,"r":14},{"nation":"usa","type":"infantry_division","q":6,"r":14},
+    {"nation":"usa","type":"armored_division","q":4,"r":12},{"nation":"usa","type":"armored_division","q":5,"r":12},
+    {"nation":"usa","type":"airborne_division","q":9,"r":10},
+    {"nation":"uk","type":"infantry_division","q":2,"r":13},{"nation":"uk","type":"infantry_division","q":2,"r":12},
+    {"nation":"uk","type":"armoured_division","q":3,"r":12},{"nation":"uk","type":"airborne_division","q":8,"r":10},
+    {"nation":"germany","type":"infantry_division","q":10,"r":5},{"nation":"germany","type":"infantry_division","q":9,"r":6},
+    {"nation":"germany","type":"infantry_division","q":8,"r":6},{"nation":"germany","type":"infantry_division","q":11,"r":7},
+    {"nation":"germany","type":"panzer_division","q":12,"r":4},{"nation":"germany","type":"panzer_division","q":14,"r":5},
+    {"nation":"germany","type":"ss_panzer_division","q":13,"r":2},
+    {"nation":"germany","type":"infantry_division","q":15,"r":6},{"nation":"germany","type":"infantry_division","q":17,"r":12},
+    {"nation":"germany","type":"fallschirmjager_division","q":6,"r":4}
+  ]
+}

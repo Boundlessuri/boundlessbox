@@ -1,0 +1,50 @@
+{
+  "name": "法国战役 - 1940",
+  "player_nation": "germany",
+  "ai_nation": "france",
+  "player_air": true,
+  "ai_air": false,
+  "max_turns": 10,
+  "player_allies": [],
+  "ai_allies": ["uk"],
+  "map": {
+    "cols": 20,
+    "rows": 15,
+    "hex_size": 24,
+    "terrain": [
+      {"q":3,"r":3,"t":4,"vp":10},{"q":16,"r":7,"t":4,"vp":10},{"q":10,"r":7,"t":4,"vp":5},
+      {"q":7,"r":5,"t":1,"vp":0},{"q":8,"r":5,"t":1,"vp":0},{"q":7,"r":6,"t":1,"vp":0},
+      {"q":8,"r":6,"t":1,"vp":0},{"q":9,"r":6,"t":1,"vp":0},{"q":9,"r":5,"t":1,"vp":0},
+      {"q":5,"r":8,"t":1,"vp":0},{"q":6,"r":8,"t":1,"vp":0},{"q":5,"r":9,"t":1,"vp":0},
+      {"q":11,"r":3,"t":1,"vp":0},{"q":12,"r":3,"t":1,"vp":0},{"q":12,"r":4,"t":1,"vp":0},
+      {"q":4,"r":6,"t":2,"vp":0},{"q":5,"r":5,"t":2,"vp":0},{"q":15,"r":5,"t":2,"vp":0},
+      {"q":14,"r":6,"t":2,"vp":0},{"q":13,"r":8,"t":2,"vp":0},{"q":14,"r":8,"t":2,"vp":0},
+      {"q":6,"r":10,"t":2,"vp":0},{"q":7,"r":11,"t":2,"vp":0},
+      {"q":9,"r":12,"t":6,"vp":0},{"q":10,"r":12,"t":6,"vp":0},{"q":8,"r":12,"t":6,"vp":0},
+      {"q":8,"r":10,"t":6,"vp":0},{"q":9,"r":10,"t":6,"vp":0},{"q":10,"r":10,"t":6,"vp":0},
+      {"q":17,"r":6,"t":1,"vp":0},{"q":17,"r":7,"t":1,"vp":0},{"q":18,"r":6,"t":1,"vp":0}
+    ]
+  },
+  "units": [
+    {"nation":"germany","type":"panzer_division","q":2,"r":3},
+    {"nation":"germany","type":"panzer_division","q":3,"r":2},
+    {"nation":"germany","type":"panzer_division","q":1,"r":4},
+    {"nation":"germany","type":"infantry_division","q":1,"r":5},
+    {"nation":"germany","type":"infantry_division","q":2,"r":6},
+    {"nation":"germany","type":"infantry_division","q":1,"r":7},
+    {"nation":"germany","type":"infantry_division","q":3,"r":7},
+    {"nation":"germany","type":"infantry_division","q":2,"r":8},
+    {"nation":"germany","type":"infantry_division","q":4,"r":4},
+    {"nation":"germany","type":"ss_panzer_division","q":1,"r":6},
+    {"nation":"france","type":"infantry_division","q":15,"r":6},
+    {"nation":"france","type":"infantry_division","q":14,"r":7},
+    {"nation":"france","type":"infantry_division","q":15,"r":8},
+    {"nation":"france","type":"infantry_division","q":16,"r":8},
+    {"nation":"france","type":"infantry_division","q":17,"r":7},
+    {"nation":"france","type":"armored_division","q":16,"r":6},
+    {"nation":"france","type":"colonial_division","q":17,"r":8},
+    {"nation":"uk","type":"infantry_division","q":18,"r":5},
+    {"nation":"uk","type":"infantry_division","q":18,"r":7},
+    {"nation":"uk","type":"armoured_division","q":17,"r":5}
+  ]
+}
