@@ -8,7 +8,9 @@ import sys
 import time
 import numpy as np
 import pyopencl as cl
-from PySide6.QtCore import QObject, Signal, QThread
+from PySide6.QtCore import QObject, Signal, QThread, Qt, QRectF, QSize
+from PySide6.QtGui import QPainter, QColor, QFont, QLinearGradient
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
 
 # ---------------------------------------------------------------------------
 # OpenCL kernel constants
@@ -245,3 +247,108 @@ class BenchmarkEngine(QObject):
         gflops = total_flops / elapsed / 1e9
 
         return gflops
+
+
+# ---------------------------------------------------------------------------
+# BarChartWidget
+# ---------------------------------------------------------------------------
+
+class BarChartWidget(QWidget):
+    """Horizontal bar chart showing benchmark results."""
+
+    # Color per precision
+    COLORS = {
+        "FP32": QColor("#4CAF50"),
+        "FP16": QColor("#2196F3"),
+        "INT8": QColor("#FF9800"),
+    }
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._results = {}
+        self.setMinimumSize(400, 180)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+    def set_results(self, results):
+        """Set the results dict and trigger repaint."""
+        self._results = dict(results)
+        self.update()
+
+    def minimumSizeHint(self):
+        """Return the minimum size hint for layout."""
+        return QSize(400, 200)
+
+    def paintEvent(self, event):
+        if not self._results:
+            return
+
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        w = self.width()
+        h = self.height()
+        bar_h = 36
+        gap = 16
+        top_margin = 20
+        label_width = 60
+        value_width = 160
+        chart_left = label_width + 10
+        chart_right = w - value_width - 20
+        chart_width = chart_right - chart_left
+
+        # Find max for scaling
+        max_val = max(self._results.values()) if self._results else 1.0
+        max_val = max_val * 1.05 if max_val > 0 else 1.0  # 5% headroom
+
+        # Title
+        font_title = QFont()
+        font_title.setPointSize(12)
+        font_title.setBold(True)
+        painter.setFont(font_title)
+        painter.setPen(QColor("#e0e0e0"))
+        painter.drawText(QRectF(0, 4, w, 22), Qt.AlignCenter, "GPU Peak Throughput Benchmark")
+
+        font_label = QFont()
+        font_label.setPointSize(10)
+        font_value = QFont()
+        font_value.setPointSize(10)
+        font_value.setBold(True)
+
+        painter.setFont(font_label)
+
+        items = list(self._results.items())
+        # Sort by value descending for visual clarity
+        items.sort(key=lambda x: x[1], reverse=True)
+
+        for i, (precision, gflops) in enumerate(items):
+            y = top_margin + i * (bar_h + gap)
+
+            # Precision label
+            painter.setPen(QColor("#cccccc"))
+            painter.drawText(QRectF(0, y, label_width, bar_h),
+                             Qt.AlignRight | Qt.AlignVCenter, precision)
+
+            # Bar background
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(QColor(60, 60, 60))
+            painter.drawRoundedRect(QRectF(chart_left, y + 4, chart_width, bar_h - 8), 4, 4)
+
+            # Bar fill with gradient
+            bar_w = int(chart_width * (gflops / max_val))
+            color = self.COLORS.get(precision, QColor("#888888"))
+            grad = QLinearGradient(chart_left, 0, chart_left + bar_w, 0)
+            grad.setColorAt(0.0, color.lighter(120))
+            grad.setColorAt(1.0, color)
+
+            painter.setBrush(grad)
+            painter.drawRoundedRect(QRectF(chart_left, y + 4, bar_w, bar_h - 8), 4, 4)
+
+            # Value text after bar
+            painter.setPen(QColor("#ffffff"))
+            painter.setFont(font_value)
+            unit = "GOPS" if precision == "INT8" else "GFLOPS"
+            painter.drawText(QRectF(chart_right + 10, y, value_width - 10, bar_h),
+                             Qt.AlignLeft | Qt.AlignVCenter,
+                             f"{gflops:,.1f} {unit}")
+
+        painter.end()
