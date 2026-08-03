@@ -124,6 +124,7 @@ class BenchmarkEngine(QObject):
             )
         except Exception as e:
             self.error.emit(f"Failed to open device: {e}")
+            self.finished.emit({})
             return
 
         self.device_info.emit(f"{platform.name} - {device.name}")
@@ -163,7 +164,9 @@ class BenchmarkEngine(QObject):
         except cl.RuntimeError:
             build_log = "unknown"
             try:
-                build_log = prg.get_build_info(ctx.devices[0]).build_log
+                build_log = prg.get_build_info(
+                    ctx.devices[0], cl.program_build_info.LOG
+                )
             except Exception:
                 pass
             raise cl.RuntimeError(f"Build error:\n{build_log}")
@@ -592,9 +595,8 @@ class MainWindow(QMainWindow):
     def _cancel_benchmark(self):
         if self._engine:
             self._engine.cancel()
-        self._start_btn.setEnabled(True)
         self._cancel_btn.setEnabled(False)
-        self._status_label.setText("Cancelled")
+        self._status_label.setText("Cancelling...")
 
 
 # ---------------------------------------------------------------------------
