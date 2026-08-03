@@ -228,12 +228,11 @@ class BenchmarkEngine(QObject):
             factor = (target_ms / 1000.0) / elapsed
             iters = max(100, int(iters * factor))
             iters = min(iters, 1000000)
-
-            if factor > 1.5 or factor < 0.67:
-                t_start = time.perf_counter()
-                kernel(queue, (work_size,), None, a_buf, b_buf, np.int32(iters))
-                queue.finish()
-                elapsed = time.perf_counter() - t_start
+            # Always re-measure with adjusted iters so elapsed matches iters
+            t_start = time.perf_counter()
+            kernel(queue, (work_size,), None, a_buf, b_buf, np.int32(iters))
+            queue.finish()
+            elapsed = time.perf_counter() - t_start
 
         # Ops per work-item per iteration
         if precision == "INT8":
