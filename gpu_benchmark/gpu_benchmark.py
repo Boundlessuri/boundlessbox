@@ -10,7 +10,11 @@ import numpy as np
 import pyopencl as cl
 from PySide6.QtCore import QObject, Signal, QThread, Qt, QRectF, QSize
 from PySide6.QtGui import QPainter, QColor, QFont, QLinearGradient
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
+from PySide6.QtWidgets import (
+    QWidget, QVBoxLayout, QSizePolicy,
+    QMainWindow, QHBoxLayout, QComboBox, QCheckBox, QPushButton,
+    QLabel, QProgressBar, QMessageBox, QApplication, QGroupBox
+)
 
 # ---------------------------------------------------------------------------
 # OpenCL kernel constants
@@ -352,3 +356,236 @@ class BarChartWidget(QWidget):
                              f"{gflops:,.1f} {unit}")
 
         painter.end()
+
+
+# ---------------------------------------------------------------------------
+# MainWindow
+# ---------------------------------------------------------------------------
+
+class MainWindow(QMainWindow):
+    """Full application window for the GPU Peak Throughput Benchmark."""
+
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("GPU Peak Throughput Benchmark")
+        self.setMinimumSize(640, 480)
+        self.resize(700, 520)
+        self._engine = None
+        self._thread = None
+
+        central = QWidget()
+        self.setCentralWidget(central)
+        layout = QVBoxLayout(central)
+        layout.setSpacing(10)
+        layout.setContentsMargins(16, 12, 16, 16)
+
+        # --- Device selector ---
+        dev_group = QGroupBox("Device")
+        dev_layout = QHBoxLayout(dev_group)
+        self._combo = QComboBox()
+        self._combo.setMinimumWidth(300)
+        dev_layout.addWidget(self._combo)
+        refresh_btn = QPushButton("Refresh")
+        refresh_btn.clicked.connect(self._refresh_devices)
+        dev_layout.addWidget(refresh_btn)
+        dev_layout.addStretch()
+        layout.addWidget(dev_group)
+
+        # --- Precision checkboxes ---
+        prec_group = QGroupBox("Precisions to Test")
+        prec_layout = QHBoxLayout(prec_group)
+        self._cb_fp32 = QCheckBox("FP32")
+        self._cb_fp32.setChecked(True)
+        self._cb_fp16 = QCheckBox("FP16")
+        self._cb_fp16.setChecked(True)
+        self._cb_int8 = QCheckBox("INT8")
+        self._cb_int8.setChecked(True)
+        prec_layout.addWidget(self._cb_fp32)
+        prec_layout.addWidget(self._cb_fp16)
+        prec_layout.addWidget(self._cb_int8)
+        prec_layout.addStretch()
+        layout.addWidget(prec_group)
+
+        # --- Progress ---
+        self._status_label = QLabel("Ready")
+        self._status_label.setStyleSheet("color: #aaa;")
+        layout.addWidget(self._status_label)
+        self._progress = QProgressBar()
+        self._progress.setRange(0, 0)  # indeterminate by default
+        self._progress.setVisible(False)
+        layout.addWidget(self._progress)
+
+        # --- Buttons ---
+        btn_layout = QHBoxLayout()
+        self._start_btn = QPushButton("Start Benchmark")
+        self._start_btn.setMinimumHeight(36)
+        self._start_btn.clicked.connect(self._start_benchmark)
+        self._cancel_btn = QPushButton("Cancel")
+        self._cancel_btn.setEnabled(False)
+        self._cancel_btn.clicked.connect(self._cancel_benchmark)
+        btn_layout.addWidget(self._start_btn)
+        btn_layout.addWidget(self._cancel_btn)
+        btn_layout.addStretch()
+        layout.addLayout(btn_layout)
+
+        # --- Bar chart ---
+        self._chart = BarChartWidget()
+        layout.addWidget(self._chart, stretch=1)
+
+        # Apply dark theme
+        self.setStyleSheet("""
+            QMainWindow, QWidget {
+                background-color: #2b2b2b;
+                color: #e0e0e0;
+                font-size: 13px;
+            }
+            QGroupBox {
+                border: 1px solid #555;
+                border-radius: 6px;
+                margin-top: 8px;
+                padding-top: 14px;
+                font-weight: bold;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 12px;
+                padding: 0 4px;
+            }
+            QComboBox {
+                background: #3c3c3c;
+                border: 1px solid #555;
+                border-radius: 4px;
+                padding: 4px 8px;
+            }
+            QComboBox::drop-down {
+                border: none;
+            }
+            QCheckBox {
+                spacing: 6px;
+            }
+            QPushButton {
+                background: #3c3c3c;
+                border: 1px solid #555;
+                border-radius: 4px;
+                padding: 6px 16px;
+                min-width: 80px;
+            }
+            QPushButton:hover {
+                background: #4a4a4a;
+            }
+            QPushButton:pressed {
+                background: #555;
+            }
+            QPushButton:disabled {
+                color: #666;
+            }
+            QProgressBar {
+                border: 1px solid #555;
+                border-radius: 4px;
+                text-align: center;
+                background: #3c3c3c;
+            }
+            QProgressBar::chunk {
+                background: #2196F3;
+                border-radius: 3px;
+            }
+        """)
+
+        # Populate devices on startup
+        self._refresh_devices()
+
+    def _refresh_devices(self):
+        self._combo.clear()
+        try:
+            devices = BenchmarkEngine.list_devices()
+            if not devices:
+                self._combo.addItem("No OpenCL devices found")
+                return
+            for plat_name, dev_name, pi, di in devices:
+                self._combo.addItem(f"[{plat_name}] {dev_name}", (pi, di))
+        except Exception as e:
+            self._combo.addItem(f"Error: {e}")
+
+    def _start_benchmark(self):
+        idx = self._combo.currentData()
+        if idx is None:
+            QMessageBox.warning(self, "No Device", "Select a device first.")
+            return
+        pi, di = idx
+
+        precisions = []
+        if self._cb_fp32.isChecked():
+            precisions.append("FP32")
+        if self._cb_fp16.isChecked():
+            precisions.append("FP16")
+        if self._cb_int8.isChecked():
+            precisions.append("INT8")
+        if not precisions:
+            QMessageBox.warning(self, "No Precision", "Select at least one precision.")
+            return
+
+        self._start_btn.setEnabled(False)
+        self._cancel_btn.setEnabled(True)
+        self._progress.setVisible(True)
+        self._progress.setRange(0, 0)  # indeterminate
+        self._status_label.setText("Starting...")
+
+        # Setup worker thread
+        self._thread = QThread()
+        self._engine = BenchmarkEngine()
+        self._engine.moveToThread(self._thread)
+
+        self._engine.progress.connect(self._on_progress)
+        self._engine.finished.connect(self._on_finished)
+        self._engine.error.connect(self._on_error)
+        self._thread.started.connect(
+            lambda: self._engine.run_benchmark(pi, di, precisions)
+        )
+        self._thread.finished.connect(self._thread.deleteLater)
+        self._thread.start()
+
+    def _on_progress(self, precision, status, gflops):
+        unit = "GOPS" if precision == "INT8" else "GFLOPS"
+        self._status_label.setText(f"[{precision}] {status}: {gflops:,.1f} {unit}")
+
+    def _on_finished(self, results):
+        self._start_btn.setEnabled(True)
+        self._cancel_btn.setEnabled(False)
+        self._progress.setVisible(False)
+        if results:
+            self._status_label.setText("Benchmark complete")
+            self._chart.set_results(results)
+        else:
+            self._status_label.setText("No results (cancelled)")
+        if self._thread:
+            self._thread.quit()
+            self._thread.wait()
+            self._thread = None
+            self._engine = None
+
+    def _on_error(self, msg):
+        self._status_label.setText(f"Error: {msg}")
+        QMessageBox.critical(self, "Benchmark Error", msg)
+
+    def _cancel_benchmark(self):
+        if self._engine:
+            self._engine.cancel()
+        self._start_btn.setEnabled(True)
+        self._cancel_btn.setEnabled(False)
+        self._status_label.setText("Cancelled")
+
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+
+def main():
+    app = QApplication(sys.argv)
+    app.setApplicationName("GPU Benchmark")
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()
