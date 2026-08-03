@@ -102,6 +102,16 @@ class BenchmarkEngine(QObject):
                 devices.append((platform.name, device.name, pi, di))
         return devices
 
+    @staticmethod
+    def check_fp16_support(platform_idx, device_idx):
+        """Return True if cl_khr_fp16 extension is available."""
+        try:
+            platform = cl.get_platforms()[platform_idx]
+            device = platform.get_devices()[device_idx]
+            return "cl_khr_fp16" in device.extensions
+        except Exception:
+            return False
+
     def run_benchmark(self, platform_idx, device_idx, precisions):
         """Main entry point — called from worker thread via signal/slot."""
         self._cancel = False
@@ -503,6 +513,18 @@ class MainWindow(QMainWindow):
                 return
             for plat_name, dev_name, pi, di in devices:
                 self._combo.addItem(f"[{plat_name}] {dev_name}", (pi, di))
+            # Check FP16 support on first device
+            if devices:
+                pi0, di0 = devices[0][2], devices[0][3]
+                has_fp16 = BenchmarkEngine.check_fp16_support(pi0, di0)
+                if not has_fp16:
+                    self._cb_fp16.setChecked(False)
+                    self._cb_fp16.setEnabled(False)
+                    self._cb_fp16.setToolTip("Device does not support cl_khr_fp16")
+                else:
+                    self._cb_fp16.setEnabled(True)
+                    self._cb_fp16.setChecked(True)
+                    self._cb_fp16.setToolTip("")
         except Exception as e:
             self._combo.addItem(f"Error: {e}")
 
